@@ -15,18 +15,12 @@ followers = sa.Table(
 )
 
 class User(UserMixin, db.Model):
-    id: so.Mapped[int] = so.mapped_column(primary_key=True)
-    
-    username: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=True)
-    
-    email: so.Mapped[str] = so.mapped_column(sa.String(120), index=True, unique=True)
-    
-    password_hash: so.Mapped[Optional[str]] = so.mapped_column(sa.String(256))
-    
-    posts: so.WriteOnlyMapped['Post'] = so.relationship(back_populates='author')
-    
-    about_me: so.Mapped[Optional[str]] = so.mapped_column(sa.String(140))
-    
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)    
+    username: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=True)    
+    email: so.Mapped[str] = so.mapped_column(sa.String(120), index=True, unique=True)    
+    password_hash: so.Mapped[Optional[str]] = so.mapped_column(sa.String(256))    
+    posts: so.WriteOnlyMapped['Post'] = so.relationship(back_populates='author')    
+    about_me: so.Mapped[Optional[str]] = so.mapped_column(sa.String(140))    
     last_seen: so.Mapped[Optional[datetime]] = so.mapped_column(default=lambda: datetime.now(timezone.utc))
     
     def set_password(self, password):
@@ -68,6 +62,17 @@ class User(UserMixin, db.Model):
     def following_count(self):
         query = sa.select(sa.func.count()).select_from(self.following.select().subquery())
         return db.session.scalar(query)
+    
+    def following_posts(self):
+        Author = so.aliased(User)
+        Follower = so.aliased(User)
+        return (
+            sa.select(Post)
+            .join(Post.author.of_type(Follower))
+            .join(Author.followers.of_type(Follower))
+            .where(Follower.id == self.id)
+            .order_by(Post.timestamp.desc())
+        )
 
     def __repr__(self):
         return f'<User {self.username}>'
