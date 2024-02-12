@@ -68,7 +68,7 @@ class User(UserMixin, db.Model):
         Follower = so.aliased(User)
         return (
             sa.select(Post)
-            .join(Post.author.of_type(Follower))
+            .join(Post.author.of_type(Author))
             .join(Author.followers.of_type(Follower))
             .where(Follower.id == self.id)
             .order_by(Post.timestamp.desc())
