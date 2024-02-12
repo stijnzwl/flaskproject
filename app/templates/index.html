@@ -17,7 +17,7 @@
 {% endif %}
 {% for post in posts %}
 <div>
-    <p>{{ post.author.username }} says: <b>{{ post.body }}</b></p>
+    {% include '_post.html' %}
 </div>
 {% endfor %}
 {% endblock %}
