@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block content %}
+
+<h3>Player's Cards</h3>
+{% for card in player_hand %}
+<p>{{ card[0] }}</p>
+{% endfor %}
+<p>Score: {{ player_score }}</p>
+
+<H3>Dealer's Cards</H3>
+<p>{{ dealer_hand[0][0] }}</p>
+
+
+{% endblock %}
