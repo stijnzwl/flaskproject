@@ -7,11 +7,10 @@
 {% for card in player_hand %}
 <img src="{{ url_for('static', filename=card[2]) }}">
 {% endfor %}
-<p>Score: {{ player_score }}</p>
 
 <H3>Dealer's Cards</H3>
 <img src="{{ url_for('static', filename=dealer_hand[0][2]) }}" alt="{{ dealer_hand[0][0] }}">
-<img src="{{ url_for('static', filename='/cards/card_back.png') }}">
+<img src="{{ url_for('static', filename='/cards/2B.png') }}">
 
 
 {% endblock %}
