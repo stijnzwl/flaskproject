@@ -18,7 +18,7 @@ def blackjack():
             blackjack_game.deal_initial_cards()
         )
 
-        new_game = Game(user_id=current_user.id, game_type="Blackjack")
+        new_game = Game(user_id=current_user.id, game_type="Blackjack", winner="pending")
         db.session.add(new_game)
         db.session.flush()
 
@@ -35,7 +35,7 @@ def blackjack():
         flash("New game started!")
 
         game = (
-            Game.query.filter_by(user_id=current_user.id, game_type="Blackjack")
+            Game.query.filter_by(user_id=current_user.id, game_type="Blackjack", winner="pending")
             .order_by(Game.timestamp.desc())
             .first()
         )
@@ -44,7 +44,7 @@ def blackjack():
             player_hand = json.loads(game_status.player_hand)
             dealer_hand = json.loads(game_status.dealer_hand)
             if player_score == 21 and dealer_score != 21:
-                blackjack_game.blackjack_win()
+                blackjack_game.blackjack_win(new_game)
         return render_template(
             "casino/blackjack.html",
             player_hand=player_hand,

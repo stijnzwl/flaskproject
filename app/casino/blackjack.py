@@ -1,5 +1,7 @@
 from random import randint, shuffle
 from flask import url_for, flash
+from app.models import Game
+from app import db
 
 
 class Blackjack:
@@ -86,11 +88,13 @@ class Blackjack:
             ace_count -= 1
         return total
 
-    def blackjack_win(self):
+    def blackjack_win(self, game):
+        game.winner = "player"
+        db.session.commit()
         flash("Blackjack! You win!")
-
-    def blackjack_tie(self):
-        flash("Blackjack, but the dealer also has blackjack. Tie!")
 
     def blackjack_loss(self):
         flash("Dealer has blackjack, you lose!")
+
+    def blackjack_tie(self):
+        flash("Blackjack, but the dealer also has blackjack. Tie!")
