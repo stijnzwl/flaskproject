@@ -6,8 +6,8 @@ from app import db
 from app.models import User, Game, GameStatus
 
 
-class StartGame(FlaskForm):
-    yes = SubmitField("Yes")
+class StartGameForm(FlaskForm):
+    start_game = SubmitField("Yes")
     no = SubmitField("No")
 
 
