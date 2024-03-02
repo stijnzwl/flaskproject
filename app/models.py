@@ -135,6 +135,20 @@ class Post(db.Model):
         return "<Post {}>".format(self.body)
 
 
-
 class Game(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), index=True)
+    game_type: so.Mapped[str] = so.mapped_column(sa.String(50))
+    timestamp: so.Mapped[datetime] = so.mapped_column(
+        index=True, default=lambda: datetime.now(timezone.utc)
+    )
+
+
+class GameStatus(db.Model):
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    game_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Game.id), index=True)
+    player_hand: so.Mapped[str] = so.mapped_column(sa.String(250))
+    dealer_hand: so.Mapped[str] = so.mapped_column(sa.String(250))
+    game_status: so.Mapped[str] = so.mapped_column(sa.String(250))
+    dealer_score: so.Mapped[int] = so.mapped_column(sa.Integer)
+    player_score: so.Mapped[int] = so.mapped_column(sa.Integer)
