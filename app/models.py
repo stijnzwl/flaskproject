@@ -142,7 +142,6 @@ class Game(db.Model):
     timestamp: so.Mapped[datetime] = so.mapped_column(
         index=True, default=lambda: datetime.now(timezone.utc)
     )
-    winner: so.Mapped[str] = so.mapped_column(sa.String(25))
 
 
 class GameStatus(db.Model):
