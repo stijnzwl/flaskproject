@@ -56,7 +56,7 @@ class Blackjack:
                 card_value = values[name]
                 card_name = f"{name} of {suit}"
                 # Assuming you have a consistent naming scheme for your images
-                image_path = f"/cards/card_{suit.lower()}_{name.lower()}.png"
+                image_path = f"/cards/card_{suit.lower()}_{name}.png"
                 deck.append((card_name, card_value, image_path))
         shuffle(deck)
         return deck

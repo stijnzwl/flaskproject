@@ -3,6 +3,9 @@
 
 {% block content %}
 
+<h1>{{ _('Play?') }}</h1>
+{{ wtf.quick_form(form) }}
+
 
 {% if player_hand %}
 <h3>Player's Cards</h3>

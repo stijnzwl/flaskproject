@@ -5,6 +5,7 @@ from app.casino.forms import FirstMoveForm, StartGameForm
 from flask_login import current_user, login_required
 from app.models import GameStatus, Game
 from app import db
+import json
 
 
 @bp.route("/blackjack", methods=["GET", "POST"])
@@ -23,20 +24,25 @@ def blackjack():
 
         new_game_status = GameStatus(
             game_id=new_game.id,
-            player_hand=str(player_hand),
-            dealer_hand=str(dealer_hand),
+            player_hand=json.dumps(player_hand),
+            dealer_hand=json.dumps(dealer_hand),
+            player_score=player_score,
+            dealer_score=dealer_score,
             game_status='In Progress'
         )
         db.session.add(new_game_status)
         db.session.commit()
         flash('New game started!')
-        return redirect(url_for("casino.blackjack", game_id=new_game.id))
+
+        game = Game.query.filter_by(user_id=current_user.id, game_type='Blackjack').order_by(Game.timestamp.desc()).first()
+        if game:
+            game_status = GameStatus.query.filter_by(game_id=game.id).first()
+            player_hand = json.loads(game_status.player_hand)
+            dealer_hand = json.loads(game_status.dealer_hand)
+
+        return render_template("casino/blackjack.html", player_hand=player_hand, dealer_hand=dealer_hand, form=form)
 
     return render_template(
         "casino/blackjack.html",
-        player_hand=player_hand,
-        dealer_hand=dealer_hand,
-        player_score=player_score,
-        dealer_score=dealer_score,
         form=form,
     )
