@@ -3,7 +3,7 @@
 
 {% block content %}
 
-{% if game_status.game_status != "In Progress" %}
+{% if game_status.game_status != "In Progress" and form is defined %}
 <h1>{{ _('Play?') }}</h1>
 {{ wtf.quick_form(form) }}
 {% endif %}
@@ -18,7 +18,15 @@
 {% if dealer_hand %}
 <H3>Dealer Cards</H3>
 <img src="{{ url_for('static', filename=dealer_hand[0][2]) }}" alt="{{ dealer_hand[0][0] }}" class="card-image">
+{% if dealer_score == 21 and player_score == 21 %}
+<img src="{{ url_for('static', filename=dealer_hand[1][2]) }}" alt="{{ dealer_hand[1][0] }}" class="card-image">
+{% else %}
 <img src="{{ url_for('static', filename='/cards/2B.png') }}" class="card-image">
 {% endif %}
-
+{% endif %}
+{% if game_status.game_status == "In Progress" %}
+<form action="{{ url_for('casino.blackjack_hit') }}" method="post">
+    <button type="submit">Hit</button>
+</form>
+{% endif %}
 {% endblock %}

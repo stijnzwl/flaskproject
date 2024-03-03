@@ -72,8 +72,10 @@ class Blackjack:
 
     def hit(self, hand):
         card = self.deck.pop()
+        print(f"Adding card: {card}")
         hand.append(card)
-        return card
+        score = self.calculate_hand_value(hand)
+        return card, score
 
     def calculate_hand_value(self, hand):
         total = 0
@@ -93,8 +95,12 @@ class Blackjack:
         db.session.commit()
         flash("Blackjack! You win!")
 
-    def blackjack_loss(self):
+    def blackjack_loss(self, game):
+        game.winner = "dealer"
+        db.session.commit()
         flash("Dealer has blackjack, you lose!")
 
-    def blackjack_tie(self):
+    def blackjack_tie(self, game):
+        game.winner = "tie"
+        db.session.commit()
         flash("Blackjack, but the dealer also has blackjack. Tie!")
