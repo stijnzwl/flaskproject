@@ -68,10 +68,10 @@ class Blackjack:
         self.dealer_score = self.calculate_hand_value(self.dealer_hand)
 
     def update_game_status(
-        self, game, game_status, winner, message, player_score, dealer_score, deck
+        self, game, game_status, winner, message, status, player_score, dealer_score, deck
     ):
         game.winner = winner
-        game_status.game_status = "Finished"
+        game_status.game_status = status
         game_status.dealer_score = dealer_score
         game_status.player_score = player_score
         game_status.deck = json.dumps(deck)
@@ -124,6 +124,7 @@ class Blackjack:
             game_status,
             "Player",
             "Blackjack! You win!",
+            "Finished",
             player_score,
             dealer_score,
             deck,
@@ -135,6 +136,7 @@ class Blackjack:
             game_status,
             "Dealer",
             "Dealer has blackjack, you lose!",
+            "Finished",
             player_score,
             dealer_score,
             deck,
@@ -146,6 +148,7 @@ class Blackjack:
             game_status,
             "tie",
             "Blackjack, but the dealer also has blackjack. Tie!",
+            "Finished",
             player_score,
             dealer_score,
             deck,
@@ -157,6 +160,7 @@ class Blackjack:
             game_status,
             "Dealer",
             "You bust! Dealer wins.",
+            "Finished",
             player_score,
             dealer_score,
             deck,
@@ -171,6 +175,7 @@ class Blackjack:
                     game_status,
                     "Player",
                     "Dealer busts, you win!",
+                    "Finished",
                     player_score,
                     dealer_score,
                     deck,
@@ -182,6 +187,7 @@ class Blackjack:
                 game_status,
                 "Player",
                 "Dealer stands, you win!",
+                "Finished",
                 player_score,
                 dealer_score,
                 deck,
@@ -193,7 +199,56 @@ class Blackjack:
                 game_status,
                 "tie",
                 "Dealer also has 21, tie!",
+                "Finished",
                 player_score,
                 dealer_score,
                 deck,
             )
+
+    def player_not_21(self, game, game_status, player_score, dealer_score, deck):
+        if dealer_score >= 17:
+            self.update_game_status(
+                game,
+                game_status,
+                "Pending",
+                "Dealer stands",
+                "In Progress",
+                player_score,
+                dealer_score,
+                deck,
+            )
+            if player_score > dealer_score:
+                self.update_game_status(
+                    game,
+                    game_status,
+                    "Player",
+                    "You win!",
+                    "Finished",
+                    player_score,
+                    dealer_score,
+                    deck,
+                )
+        if dealer_score < 17:
+            dealer_hand, dealer_score, deck = self.dealer_hit(game_status)
+            if dealer_score > 21:
+                self.update_game_status(
+                    game,
+                    game_status,
+                    "Player",
+                    "Dealer busts, you win!",
+                    "Finished",
+                    player_score,
+                    dealer_score,
+                    deck,
+                )
+            elif dealer_score == 21:
+                self.update_game_status(
+                    game,
+                    game_status,
+                    "Dealer",
+                    "Dealer has 21, you lose!",
+                    "Finished",
+                    player_score,
+                    dealer_score,
+                    deck,
+                )
