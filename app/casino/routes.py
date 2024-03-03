@@ -14,7 +14,7 @@ def blackjack():
     form = StartGameForm()
     if form.validate_on_submit() and form.start_game.data:
         blackjack_game = Blackjack()
-        player_hand, dealer_hand, player_score, dealer_score = (
+        player_hand, dealer_hand, player_score, dealer_score, modified_deck = (
             blackjack_game.deal_initial_cards()
         )
 
@@ -28,9 +28,10 @@ def blackjack():
             game_id=new_game.id,
             player_hand=json.dumps(player_hand),
             dealer_hand=json.dumps(dealer_hand),
+            deck=json.dumps(modified_deck),
             player_score=player_score,
             dealer_score=dealer_score,
-            game_status="In Progress",
+            game_status="First Move",
         )
         db.session.add(new_game_status)
         db.session.commit()
@@ -47,10 +48,11 @@ def blackjack():
             game_status = GameStatus.query.filter_by(game_id=game.id).first()
             player_hand = json.loads(game_status.player_hand)
             dealer_hand = json.loads(game_status.dealer_hand)
+            modified_deck = json.loads(game_status.deck)
             if player_score == 21 and dealer_score != 21:
-                blackjack_game.blackjack_win(new_game)
+                blackjack_game.blackjack_win(game, game_status, player_score, dealer_score, modified_deck)
             if player_score == 21 and dealer_score == 21:
-                blackjack_game.blackjack_tie(new_game)
+                blackjack_game.blackjack_tie(game, game_status, player_score, dealer_score, modified_deck)
         return render_template(
             "casino/blackjack.html",
             player_hand=player_hand,
@@ -79,16 +81,28 @@ def blackjack_hit():
         .first()
     )
     game_status = GameStatus.query.filter_by(game_id=game.id).first()
-    blackjack_game = Blackjack()
+    game_status.game_status = "hit"
+    modified_deck = json.loads(game_status.deck)
+    dealer_hand = json.loads(game_status.dealer_hand)
     player_hand = json.loads(game_status.player_hand)
-    player_hand, player_score = blackjack_game.hit(player_hand)
-    if player_score > 21:
-        game_status.game_status = "Player Busts"
-        game.winner = "Dealer"
+    blackjack_game = Blackjack(modified_deck, player_hand, dealer_hand)
+    player_hand, player_score, modified_deck = blackjack_game.player_hit(game_status)
+    # game_status.deck = json.dumps(modified_deck)
+    dealer_score = game_status.dealer_score
+    if len(dealer_hand) == 2 and dealer_score == 21:
+        blackjack_game.blackjack_loss(game, game_status, player_score, dealer_score, modified_deck)
+    elif player_score > 21:
+        blackjack_game.player_bust(game, game_status, player_score, dealer_score, modified_deck)
+    elif player_score == 21 and dealer_score != 21:
+        blackjack_game.player_21(game, game_status, player_score, dealer_score, modified_deck)
     else:
-        game_status.player_score = player_score  
+        game_status.player_score = player_score
     game_status.player_hand = json.dumps(player_hand)
+    game_status.dealer_hand = json.dumps(dealer_hand)
     db.session.commit()
     return render_template(
-        "casino/blackjack.html", player_hand=player_hand, game_status=game_status
+        "casino/blackjack.html",
+        player_hand=player_hand,
+        game_status=game_status,
+        dealer_hand=dealer_hand,
     )
