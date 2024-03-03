@@ -5,10 +5,26 @@ from flask_babel import _, get_locale
 import sqlalchemy as sa
 from langdetect import detect, LangDetectException
 from app import db
-from app.main.forms import EditProfileForm, EmptyForm, PostForm
+from app.main.forms import EditProfileForm, EmptyForm, PostForm, AddMoneyForm
 from app.models import User, Post
 from app.translate import translate
 from app.main import bp
+from decimal import Decimal
+
+
+def update_balance(amount_to_add):
+    if current_user.is_authenticated:
+        if not isinstance(amount_to_add, Decimal):
+            amount_to_add = Decimal(str(amount_to_add))
+
+        if current_user.balance is None:
+            current_user.balance = amount_to_add
+        else:
+            current_user.balance += amount_to_add
+
+        db.session.commit()
+    else:
+        raise Exception("No authenticated user found.")
 
 
 @bp.before_app_request
@@ -78,6 +94,7 @@ def user(username):
     user = db.first_or_404(sa.select(User).where(User.username == username))
     page = request.args.get("page", 1, type=int)
     query = user.posts.select().order_by(Post.timestamp.desc())
+    balance = user.balance
     posts = db.paginate(
         query, page=page, per_page=current_app.config["POSTS_PER_PAGE"], error_out=False
     )
@@ -91,6 +108,7 @@ def user(username):
         if posts.has_prev
         else None
     )
+    money_form = AddMoneyForm()
     form = EmptyForm()
     return render_template(
         "user.html",
@@ -99,6 +117,8 @@ def user(username):
         next_url=next_url,
         prev_url=prev_url,
         form=form,
+        money_form=money_form,
+        balance=balance
     )
 
 

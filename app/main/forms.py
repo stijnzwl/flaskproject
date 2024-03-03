@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, TextAreaField
-from wtforms.validators import ValidationError, DataRequired, Length
+from wtforms.validators import ValidationError, DataRequired, Length, Regexp
 import sqlalchemy as sa
 from flask_babel import _, lazy_gettext as _l
 from app import db
@@ -34,3 +34,13 @@ class PostForm(FlaskForm):
         _l("Say something"), validators=[DataRequired(), Length(min=1, max=140)]
     )
     submit = SubmitField(_l("Submit"))
+
+
+class AddMoneyForm(FlaskForm):
+    amount = StringField(
+        "Add Amount",
+        validators=[
+            DataRequired(),
+            Regexp(r"^\d+(\.\d{1,2})?$", message="Enter a valid amount."),
+        ],
+    )

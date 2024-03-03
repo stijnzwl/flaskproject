@@ -9,6 +9,7 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 from app import db, login
+from decimal import Decimal
 
 
 followers = sa.Table(
@@ -27,6 +28,9 @@ class User(UserMixin, db.Model):
     about_me: so.Mapped[Optional[str]] = so.mapped_column(sa.String(140))
     last_seen: so.Mapped[Optional[datetime]] = so.mapped_column(
         default=lambda: datetime.now(timezone.utc)
+    )
+    balance: so.Mapped[Decimal] = so.mapped_column(
+        sa.Numeric(10, 2), default=Decimal("0.0"), nullable=False
     )
 
     posts: so.WriteOnlyMapped["Post"] = so.relationship(back_populates="author")
@@ -143,6 +147,7 @@ class Game(db.Model):
         index=True, default=lambda: datetime.now(timezone.utc)
     )
     winner: so.Mapped[str] = so.mapped_column(sa.String(25))
+
 
 class GameStatus(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)

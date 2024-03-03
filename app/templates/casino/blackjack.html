@@ -13,6 +13,11 @@
 {% endif %}
 {% endif %}
 
+{% if game_status.game_status == "Finished" %}
+<form action="{{ url_for('casino.blackjack') }}" method="post">
+    <button type="submit">Back to start</button>
+</form>
+{% endif %}
 
 {% if player_hand %}
 <h3>Your Cards</h3>
