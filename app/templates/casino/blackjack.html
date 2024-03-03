@@ -4,8 +4,13 @@
 {% block content %}
 
 {% if game_status.game_status != "In Progress" and form is defined %}
+{% if game_status.game_status == "Finished" %}
+<h1>{{ _('Another game?') }}</h1>
+{{ wtf.quick_form(form) }}
+{% else %}
 <h1>{{ _('Play?') }}</h1>
 {{ wtf.quick_form(form) }}
+{% endif %}
 {% endif %}
 
 

@@ -77,6 +77,7 @@ def blackjack():
 @bp.route("/blackjack/hit", methods=["GET", "POST"])
 @login_required
 def blackjack_hit():
+    form = StartGameForm()
     game = (
         Game.query.filter_by(
             user_id=current_user.id, game_type="Blackjack", winner="Pending"
@@ -84,6 +85,8 @@ def blackjack_hit():
         .order_by(Game.timestamp.desc())
         .first()
     )
+    if not game:
+        return redirect(url_for('casino.blackjack'))
     game_status = GameStatus.query.filter_by(game_id=game.id).first()
     game_status.game_status = "hit"
     modified_deck = json.loads(game_status.deck)
@@ -111,9 +114,17 @@ def blackjack_hit():
     game_status.player_hand = json.dumps(player_hand)
     game_status.dealer_hand = json.dumps(dealer_hand)
     db.session.commit()
+    form = StartGameForm()
     return render_template(
         "casino/blackjack.html",
         player_hand=player_hand,
         game_status=game_status,
         dealer_hand=dealer_hand,
+        form=form
     )
+
+
+# @bp.route('/blackjack/stand', method=['GET', 'POST'])
+# @login_required
+# def blackjack_stand():
+#     pass
