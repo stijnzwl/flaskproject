@@ -10,17 +10,11 @@
             {% if user.last_seen %}
             <p>{{ _('Last seen on') }}: {{ moment(user.last_seen).format('LLL') }}</p>
             {% endif %}
-
-            <p>Balance: $ {{ user.balance }}</p>
-            <form method="post">
-                {{ form.hidden_tag() }}
-                <p>{{ _('Add Money') }}</p>
-                {{ money_form.amount() }}
-            </form>
-
             <p>{{ _('%(count)d followers', count=user.followers_count()) }}, {{ _('%(count)d following',
                 count=user.following_count()) }}</p>
             {% if user == current_user %}
+            <p>Balance: $ {{ user.balance }}</p>
+            <p><a href="{{ url_for('main.manage_money') }}">Manage money</a></p>
             <p><a href="{{ url_for('main.edit_profile') }}">{{ _('Edit your profile') }}</a></p>
             {% elif not current_user.is_following(user) %}
             <p>

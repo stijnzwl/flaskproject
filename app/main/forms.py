@@ -38,9 +38,11 @@ class PostForm(FlaskForm):
 
 class AddMoneyForm(FlaskForm):
     amount = StringField(
-        "Add Amount",
+        "Add",
         validators=[
             DataRequired(),
             Regexp(r"^\d+(\.\d{1,2})?$", message="Enter a valid amount."),
         ],
     )
+    add = SubmitField('Add Money')
+    withdraw = SubmitField('Withdraw Money')

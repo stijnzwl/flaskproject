@@ -8,6 +8,7 @@
 <h1>{{ _('Another game?') }}</h1>
 {{ wtf.quick_form(form) }}
 {% else %}
+<p>Balance: $ {{ current_user.balance }}</p>
 <h1>{{ _('Play?') }}</h1>
 {{ wtf.quick_form(form) }}
 {% endif %}

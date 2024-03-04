@@ -1,8 +1,9 @@
-from random import randint, shuffle
-from flask import url_for, flash
-from app.models import Game
+from random import shuffle
+from flask import flash
 from app import db
 import json
+from flask_login import current_user
+from decimal import Decimal
 
 
 class Blackjack:
@@ -246,7 +247,7 @@ class Blackjack:
                     game,
                     game_status,
                     "Dealer",
-                    "Dealer has 21, you lose!",
+                    "Dealer hits and has 21, you lose!",
                     "Finished",
                     player_score,
                     dealer_score,

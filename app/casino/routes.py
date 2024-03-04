@@ -1,17 +1,20 @@
 from flask import render_template, redirect, url_for, flash
 from app.casino import bp
 from app.casino.blackjack import Blackjack
-from app.casino.forms import FirstMoveForm, StartGameForm
+from app.casino.forms import StartGameForm, BetForm
 from flask_login import current_user, login_required
 from app.models import GameStatus, Game
 from app import db
 import json
+from decimal import Decimal
 
 
 @bp.route("/blackjack", methods=["GET", "POST"])
 @login_required
 def blackjack():
     form = StartGameForm()
+    game_status = None
+
     if form.validate_on_submit() and form.start_game.data:
         blackjack_game = Blackjack()
         player_hand, dealer_hand, player_score, dealer_score, modified_deck = (
@@ -66,7 +69,6 @@ def blackjack():
             dealer_score=dealer_score,
         )
 
-    game_status = None
     return render_template(
         "casino/blackjack.html",
         form=form,
@@ -85,7 +87,7 @@ def blackjack_hit():
         .first()
     )
     if not game:
-        return redirect(url_for('casino.blackjack'))
+        return redirect(url_for("casino.blackjack"))
     game_status = GameStatus.query.filter_by(game_id=game.id).first()
     game_status.game_status = "hit"
     modified_deck = json.loads(game_status.deck)

@@ -9,7 +9,7 @@ from app.main.forms import EditProfileForm, EmptyForm, PostForm, AddMoneyForm
 from app.models import User, Post
 from app.translate import translate
 from app.main import bp
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 
 def update_balance(amount_to_add):
@@ -94,7 +94,6 @@ def user(username):
     user = db.first_or_404(sa.select(User).where(User.username == username))
     page = request.args.get("page", 1, type=int)
     query = user.posts.select().order_by(Post.timestamp.desc())
-    balance = user.balance
     posts = db.paginate(
         query, page=page, per_page=current_app.config["POSTS_PER_PAGE"], error_out=False
     )
@@ -108,7 +107,6 @@ def user(username):
         if posts.has_prev
         else None
     )
-    money_form = AddMoneyForm()
     form = EmptyForm()
     return render_template(
         "user.html",
@@ -117,8 +115,6 @@ def user(username):
         next_url=next_url,
         prev_url=prev_url,
         form=form,
-        money_form=money_form,
-        balance=balance
     )
 
 
@@ -185,3 +181,31 @@ def translate_text():
     return {
         "text": translate(data["text"], data["source_language"], data["dest_language"])
     }
+    
+
+@bp.route("/manage_money", methods=["GET", "POST"])
+@login_required
+def manage_money():
+    form = AddMoneyForm()
+    user = current_user
+    if form.validate_on_submit():
+        amount = Decimal(form.amount.data)
+
+        if form.add.data:
+            current_user.balance += amount
+            flash(f'Successfully added ${amount} to your balance.', 'success')
+
+        elif form.withdraw.data:
+            if amount <= current_user.balance:
+                current_user.balance -= amount
+                flash(f'Successfully withdrew ${amount} from your balance.', 'success')
+            else:
+                flash('Withdrawal amount exceeds the current balance.', 'error')
+                return render_template('manage_money.html', form=form)
+
+        db.session.commit()
+        return redirect(url_for('main.manage_money'))
+
+    return render_template('manage_money.html', form=form, user=user)
+
+

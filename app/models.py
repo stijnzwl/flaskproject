@@ -147,6 +147,9 @@ class Game(db.Model):
         index=True, default=lambda: datetime.now(timezone.utc)
     )
     winner: so.Mapped[str] = so.mapped_column(sa.String(25))
+    bet: so.Mapped[Decimal] = so.mapped_column(
+        sa.Numeric(10, 2), default=Decimal("0.0"), nullable=False
+    )
 
 
 class GameStatus(db.Model):
