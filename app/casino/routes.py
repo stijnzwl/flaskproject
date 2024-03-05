@@ -16,13 +16,18 @@ def blackjack():
     game_status = None
 
     if form.validate_on_submit() and form.start_game.data:
+        bet_amount = form.bet_amount.data
+        if current_user.balance < bet_amount:
+            flash('Insufficient balance to cover the bet.', 'warning')
+            return redirect(url_for('casino.blackjack'))
+        current_user.balance -= bet_amount
         blackjack_game = Blackjack()
         player_hand, dealer_hand, player_score, dealer_score, modified_deck = (
             blackjack_game.deal_initial_cards()
         )
 
         new_game = Game(
-            user_id=current_user.id, game_type="Blackjack", winner="Pending"
+            user_id=current_user.id, game_type="Blackjack", winner="Pending", bet=bet_amount
         )
         db.session.add(new_game)
         db.session.flush()
@@ -38,7 +43,7 @@ def blackjack():
         )
         db.session.add(new_game_status)
         db.session.commit()
-        flash("New game started!")
+        flash(f"You have placed a bet for ${bet_amount}, Good Luck!")
 
         game = (
             Game.query.filter_by(
@@ -54,7 +59,7 @@ def blackjack():
             modified_deck = json.loads(game_status.deck)
             if player_score == 21 and dealer_score != 21:
                 blackjack_game.blackjack_win(
-                    game, game_status, player_score, dealer_score, modified_deck
+                    game, game_status, player_score, dealer_score, modified_deck, game.bet
                 )
             if player_score == 21 and dealer_score == 21:
                 blackjack_game.blackjack_tie(
@@ -67,6 +72,7 @@ def blackjack():
             dealer_hand=dealer_hand,
             player_score=player_score,
             dealer_score=dealer_score,
+            bet_amount=bet_amount,
         )
 
     return render_template(
@@ -106,11 +112,11 @@ def blackjack_hit():
         )
     elif player_score == 21 and dealer_score != 21:
         blackjack_game.player_21(
-            game, game_status, player_score, dealer_score, modified_deck
+            game, game_status, player_score, dealer_score, modified_deck, game.bet
         )
     elif player_score < 21:
         blackjack_game.player_not_21(
-            game, game_status, player_score, dealer_score, modified_deck
+            game, game_status, player_score, dealer_score, modified_deck, game.bet
         )
     game_status.player_hand = json.dumps(player_hand)
     game_status.dealer_hand = json.dumps(dealer_hand)
