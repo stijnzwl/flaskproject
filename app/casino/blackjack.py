@@ -104,6 +104,7 @@ class Blackjack:
         card = self.deck.pop()
         self.player_hand.append(card)
         self.player_score = self.calculate_hand_value(self.player_hand)
+        game_status.player_score = self.player_score
         game_status.deck = json.dumps(self.deck)
         return self.player_hand, self.player_score, self.deck
 
@@ -111,6 +112,7 @@ class Blackjack:
         card = self.deck.pop()
         self.dealer_hand.append(card)
         self.dealer_score = self.calculate_hand_value(self.dealer_hand)
+        game_status.dealer_score = self.dealer_score
         game_status.deck = json.dumps(self.deck)
         return self.dealer_hand, self.dealer_score, self.deck
 
@@ -189,7 +191,7 @@ class Blackjack:
                     game,
                     game_status,
                     "Player",
-                    f"Dealer busts, you win ${winnings}",
+                    f"Dealer hits and busts, you win ${winnings}",
                     "Finished",
                     player_score,
                     dealer_score,
@@ -217,7 +219,7 @@ class Blackjack:
                 game,
                 game_status,
                 "tie",
-                "Dealer also has 21, tie!",
+                "Dealer hits and also has 21, tie!",
                 "Finished",
                 player_score,
                 dealer_score,
@@ -243,12 +245,24 @@ class Blackjack:
                     game,
                     game_status,
                     "Player",
-                    f"You win ${winnings}!",
+                    f"Congrats!, you win ${winnings}!",
                     "Finished",
                     player_score,
                     dealer_score,
                     deck,
                 )
+            elif dealer_score > player_score:
+                self.update_game_status(
+                    game,
+                    game_status,
+                    "Dealer",
+                    f"You lost!",
+                    "Finished",
+                    player_score,
+                    dealer_score,
+                    deck,
+                )
+                
         if dealer_score < 17:
             dealer_hand, dealer_score, deck = self.dealer_hit(game_status)
             if dealer_score > 21:
@@ -258,7 +272,7 @@ class Blackjack:
                     game,
                     game_status,
                     "Player",
-                    f"Dealer busts, you win ${winnings}!",
+                    f"Dealer hits and busts, you win ${winnings}!",
                     "Finished",
                     player_score,
                     dealer_score,

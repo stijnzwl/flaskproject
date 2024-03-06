@@ -45,6 +45,9 @@
 <form action="{{ url_for('casino.blackjack_hit') }}" method="post">
     <button type="submit">Hit</button>
 </form>
+<form action="{{ url_for('casino.blackjack_stand') }}" method="post">
+    <button type="submit">Stand</button>
+</form>
 {% endif %}
 
 {% endblock %}
