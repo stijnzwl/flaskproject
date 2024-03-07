@@ -106,6 +106,7 @@ class Blackjack:
         self.player_score = self.calculate_hand_value(self.player_hand)
         game_status.player_score = self.player_score
         game_status.deck = json.dumps(self.deck)
+        game_status.player_decision = "Hit"
         return self.player_hand, self.player_score, self.deck
 
     def dealer_hit(self, game_status):
@@ -198,28 +199,42 @@ class Blackjack:
                     deck,
                 )
                 break
-        if dealer_score >= 17 and dealer_score < 21:
+            elif dealer_score >= 17 and dealer_score < 21:
+                winnings = bet * Decimal("2")
+                current_user.balance += Decimal(winnings)
+                self.update_game_status(
+                    game,
+                    game_status,
+                    "Player",
+                    f"Dealer stands, you win ${winnings}!",
+                    "Finished",
+                    player_score,
+                    dealer_score,
+                    deck,
+                )
+                break
+            elif dealer_score == 21:
+                winnings = bet
+                current_user.balance += Decimal(winnings)
+                self.update_game_status(
+                    game,
+                    game_status,
+                    "tie",
+                    "Dealer hits and also has 21, tie!",
+                    "Finished",
+                    player_score,
+                    dealer_score,
+                    deck,
+                )
+                break
+        if dealer_score < 21:
             winnings = bet * Decimal("2")
             current_user.balance += Decimal(winnings)
             self.update_game_status(
                 game,
                 game_status,
                 "Player",
-                f"Dealer stands, you win ${winnings}!",
-                "Finished",
-                player_score,
-                dealer_score,
-                deck,
-            )
-
-        elif dealer_score == 21:
-            winnings = bet
-            current_user.balance += Decimal(winnings)
-            self.update_game_status(
-                game,
-                game_status,
-                "tie",
-                "Dealer hits and also has 21, tie!",
+                f"Dealer stands, you win ${winnings}! Congrats",
                 "Finished",
                 player_score,
                 dealer_score,
@@ -232,7 +247,7 @@ class Blackjack:
                 game,
                 game_status,
                 "Pending",
-                "Dealer stands",
+                "Dealer stands, your move",
                 "In Progress",
                 player_score,
                 dealer_score,
@@ -251,18 +266,7 @@ class Blackjack:
                     dealer_score,
                     deck,
                 )
-            elif dealer_score > player_score:
-                self.update_game_status(
-                    game,
-                    game_status,
-                    "Dealer",
-                    f"You lost!",
-                    "Finished",
-                    player_score,
-                    dealer_score,
-                    deck,
-                )
-                
+
         if dealer_score < 17:
             dealer_hand, dealer_score, deck = self.dealer_hit(game_status)
             if dealer_score > 21:
@@ -289,3 +293,114 @@ class Blackjack:
                     dealer_score,
                     deck,
                 )
+            elif dealer_score >= 17 and dealer_score < player_score:
+                winnings = bet * Decimal("2")
+                current_user.balance += Decimal(winnings)
+                self.update_game_status(
+                    game,
+                    game_status,
+                    "Player",
+                    f"You win ${winnings}!",
+                    "Finished",
+                    player_score,
+                    dealer_score,
+                    deck,
+                )
+            
+    def player_not_21_stand(
+        self, game, game_status, player_score, dealer_score, deck, bet
+    ):
+        if dealer_score >= 17:
+            if dealer_score > player_score:
+                self.update_game_status(
+                    game,
+                    game_status,
+                    "Dealer",
+                    "You lose!",
+                    "Finished",
+                    player_score,
+                    dealer_score,
+                    deck,
+                )
+            elif player_score > dealer_score:
+                winnings = bet * Decimal("2")
+                current_user.balance += Decimal(winnings)
+                self.update_game_status(
+                    game,
+                    game_status,
+                    "Player",
+                    f"You win ${winnings}!",
+                    "Finished",
+                    player_score,
+                    dealer_score,
+                    deck,
+                )
+            elif player_score == dealer_score:
+                winnings = bet
+                current_user.balance += Decimal(winnings)
+                self.update_game_status(
+                    game,
+                    game_status,
+                    "tie",
+                    "You both stand, tie!",
+                    "Finished",
+                    player_score,
+                    dealer_score,
+                    deck,
+                )
+        while dealer_score < 17:
+            dealer_hand, dealer_score, deck = self.dealer_hit(game_status)
+            if dealer_score > 21:
+                winnings = bet * Decimal("2")
+                current_user.balance += Decimal(winnings)
+                self.update_game_status(
+                    game,
+                    game_status,
+                    "Player",
+                    f"Dealer hits and busts, you win ${winnings}",
+                    "Finished",
+                    player_score,
+                    dealer_score,
+                    deck,
+                )
+                break
+            elif dealer_score >= 17 and dealer_score > player_score:
+                self.update_game_status(
+                    game,
+                    game_status,
+                    "Dealer",
+                    "You lose!",
+                    "Finished",
+                    player_score,
+                    dealer_score,
+                    deck,
+                )
+                break
+            elif dealer_score >= 17 and player_score > dealer_score:
+                winnings = bet * Decimal("2")
+                current_user.balance += Decimal(winnings)
+                self.update_game_status(
+                    game,
+                    game_status,
+                    "Player",
+                    f"You win ${winnings}!",
+                    "Finished",
+                    player_score,
+                    dealer_score,
+                    deck,
+                )
+                break
+            elif dealer_score == player_score:
+                winnings = bet
+                current_user.balance += Decimal(winnings)
+                self.update_game_status(
+                    game,
+                    game_status,
+                    "tie",
+                    "You both stand, tie!",
+                    "Finished",
+                    player_score,
+                    dealer_score,
+                    deck,
+                )
+                break

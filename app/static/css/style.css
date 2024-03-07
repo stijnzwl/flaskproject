@@ -3,3 +3,18 @@
     height: auto;
   }
   
+  .flash-container {
+    display: flex;
+    flex-direction: row; /* Align flash messages in a row */
+}
+
+.flash-message {
+    margin-right: 10px; /* Space between messages */
+    /* Add other styling as needed */
+}
+
+.alert-info {
+  font-size: 16px;  /* Make text smaller */
+    padding: 5px;   /* Reduce padding */
+    margin: 5px;
+}

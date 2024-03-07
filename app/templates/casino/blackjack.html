@@ -41,7 +41,7 @@
 {% endif %}
 {% endif %}
 
-{% if game_status.game_status and game_status.game_status != "Finished" %}
+{% if game_status.game_status and game_status.game_status != "Finished" and game_status.player_decision != 'Stand' %}
 <form action="{{ url_for('casino.blackjack_hit') }}" method="post">
     <button type="submit">Hit</button>
 </form>

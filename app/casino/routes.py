@@ -67,6 +67,7 @@ def start_blackjack_game(bet_amount):
         player_score=player_score,
         dealer_score=dealer_score,
         game_status="First Move",
+        player_decision="Pending",
     )
     db.session.add(new_game_status)
     db.session.commit()
@@ -87,12 +88,10 @@ def handle_initial_blackjack_logic(blackjack_game, game, game_status):
             blackjack_game.blackjack_tie(
                 game, game_status, player_score, dealer_score, modified_deck, game.bet
             )
-            flash("It's a tie with the dealer, both having Blackjack!", "info")
         else:
             blackjack_game.blackjack_win(
                 game, game_status, player_score, dealer_score, modified_deck, game.bet
             )
-            flash("Congratulations, you have Blackjack!", "success")
 
     else:
         flash("No initial Blackjack, game continues.", "secondary")
@@ -149,8 +148,9 @@ def setup_game_environment(game_status):
 def handle_player_hit(blackjack_game, game, game_status):
     player_hand, player_score, modified_deck = blackjack_game.player_hit(game_status)
     dealer_score = game_status.dealer_score
+    dealer_hand = json.loads(game_status.dealer_hand)
 
-    if len(game_status.dealer_hand) == 2 and dealer_score == 21:
+    if len(dealer_hand) == 2 and dealer_score == 21:
         blackjack_game.blackjack_loss(
             game, game_status, player_score, dealer_score, modified_deck
         )
@@ -188,7 +188,7 @@ def blackjack_stand():
     blackjack_game, player_hand, dealer_hand, modified_deck = setup_game_environment(
         game_status
     )
-
+    game_status.player_decision = "Stand"
     player_score, dealer_score = handle_player_stand(blackjack_game, game, game_status)
 
     update_game_status(game_status, player_hand, dealer_hand, modified_deck)
@@ -207,8 +207,9 @@ def handle_player_stand(blackjack_game, game, game_status):
     modified_deck = json.loads(game_status.deck)
     dealer_score = game_status.dealer_score
     player_score = game_status.player_score
-
-    if len(game_status.dealer_hand) == 2 and dealer_score == 21:
+    dealer_hand = json.loads(game_status.dealer_hand)
+    
+    if len(dealer_hand) == 2 and dealer_score == 21:
         blackjack_game.blackjack_loss(
             game, game_status, player_score, dealer_score, modified_deck
         )
@@ -217,13 +218,13 @@ def handle_player_stand(blackjack_game, game, game_status):
             game, game_status, player_score, dealer_score, modified_deck, game.bet
         )
     elif player_score < 21 and dealer_score < 17:
-        while dealer_score < 17:
-            blackjack_game.player_not_21(
-                game, game_status, player_score, dealer_score, modified_deck, game.bet
+        blackjack_game.player_not_21_stand(
+            game, game_status, player_score, dealer_score, modified_deck, game.bet
             )
-            dealer_score = game_status.dealer_score
+        dealer_score = game_status.dealer_score
     elif dealer_score >= 17:
-        blackjack_game.player_not_21(
-                game, game_status, player_score, dealer_score, modified_deck, game.bet
-            )
+        blackjack_game.player_not_21_stand(
+            game, game_status, player_score, dealer_score, modified_deck, game.bet
+        )
+        dealer_score = game_status.dealer_score
     return player_score, dealer_score

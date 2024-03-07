@@ -55,9 +55,11 @@
   <div class="container mt-3">
     {% with messages = get_flashed_messages() %}
     {% if messages %}
+    <div class="flash-container">
     {% for message in messages %}
     <div class="alert alert-info" role="alert">{{ message }}</div>
     {% endfor %}
+    </div>
     {% endif %}
     {% endwith %}
     {% block content %}{% endblock %}
