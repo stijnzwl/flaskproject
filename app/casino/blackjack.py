@@ -306,7 +306,7 @@ class Blackjack:
                     dealer_score,
                     deck,
                 )
-            
+
     def player_not_21_stand(
         self, game, game_status, player_score, dealer_score, deck, bet
     ):

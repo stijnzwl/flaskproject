@@ -1,7 +1,7 @@
 from flask import render_template, redirect, url_for, flash
 from app.casino import bp
 from app.casino.blackjack import Blackjack
-from app.casino.forms import StartGameForm, BetForm
+from app.casino.forms import StartGameForm
 from flask_login import current_user, login_required
 from app.models import GameStatus, Game
 from app import db
