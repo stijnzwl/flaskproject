@@ -59,7 +59,7 @@ class Blackjack:
             for name in names:
                 card_value = values[name]
                 card_name = f"{name} of {suit}"
-                image_path = f"/cards/card_{suit.lower()}_{name}.png"
+                image_path = f"cards/card_{suit.lower()}_{name}.png"
                 deck.append((card_name, card_value, image_path))
         shuffle(deck)
         return deck
