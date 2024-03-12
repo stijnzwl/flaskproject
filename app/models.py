@@ -207,5 +207,5 @@ class GameStatus(db.Model):
     game_status: so.Mapped[str] = so.mapped_column(sa.String(250))
     dealer_score: so.Mapped[int] = so.mapped_column(sa.Integer)
     player_score: so.Mapped[int] = so.mapped_column(sa.Integer)
-    deck: so.Mapped[str] = so.mapped_column(sa.String)
-    player_decision: so.Mapped[str] = so.mapped_column(sa.String, nullable=True)
+    deck: so.Mapped[str] = so.mapped_column(sa.Text)
+    player_decision: so.Mapped[str] = so.mapped_column(sa.String(10), nullable=True)
