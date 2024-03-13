@@ -23,6 +23,10 @@ def upgrade():
                existing_type=sa.VARCHAR(),
                type_=sa.Text(),
                existing_nullable=False)
+        batch_op.alter_column('player_decision',
+               existing_type=sa.VARCHAR(),
+               type_=sa.String(10),
+               existing_nullable=True)
 
     # ### end Alembic commands ###
 
@@ -34,5 +38,9 @@ def downgrade():
                existing_type=sa.Text(),
                type_=sa.VARCHAR(),
                existing_nullable=False)
+        batch_op.alter_column('player_decision',
+               existing_type=sa.String(10),
+               type_=sa.VARCHAR(),
+               existing_nullable=True)
 
     # ### end Alembic commands ###
