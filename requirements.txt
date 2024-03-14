@@ -50,6 +50,6 @@ rsa==4.9
 six==1.16.0
 SQLAlchemy==2.0.25
 typing_extensions==4.9.0
-urllib3==2.2.1
+urllib3==1.21.1
 Werkzeug==3.0.1
 WTForms==3.1.2
