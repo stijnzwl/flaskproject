@@ -38,7 +38,7 @@ class EditProfileForm(FlaskForm):
 
 
 class EmptyForm(FlaskForm):
-    submit = SubmitField("Submit")
+    submit = SubmitField(_("Submit"))
 
 
 class PostForm(FlaskForm):
@@ -53,8 +53,15 @@ class AddMoneyForm(FlaskForm):
         "Add",
         validators=[
             DataRequired(),
-            Regexp(r"^\d+(\.\d{1,2})?$", message="Enter a valid amount."),
+            Regexp(r"^\d+(\.\d{1,2})?$", message=_("Enter a valid amount.")),
         ],
     )
-    add = SubmitField("Add Money")
-    withdraw = SubmitField("Withdraw Money")
+    add = SubmitField(_("Add Money"))
+    withdraw = SubmitField(_("Withdraw Money"))
+
+
+class MessageForm(FlaskForm):
+    message = TextAreaField(
+        _l("Message"), validators=[DataRequired(), Length(min=0, max=140)]
+    )
+    submit = SubmitField(_l("Submit"))
