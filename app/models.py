@@ -79,6 +79,7 @@ class User(UserMixin, db.Model):
         default=lambda: datetime.now(timezone.utc)
     )
     last_message_read_time: so.Mapped[Optional[datetime]]
+    tasks: so.WriteOnlyMapped["Task"] = so.relationship(back_populates="user")
     balance: so.Mapped[Decimal] = so.mapped_column(
         sa.Numeric(10, 2), default=Decimal("0.0"), nullable=False
     )
