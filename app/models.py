@@ -1,6 +1,7 @@
 from datetime import datetime, timezone, timedelta
-import secrets
 from hashlib import md5
+import json
+import secrets
 from time import time
 from typing import Optional
 import sqlalchemy as sa
@@ -9,43 +10,13 @@ from flask import current_app, url_for
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
-from app import db, login
-from app.search import add_to_index, remove_from_index, query_index
-import json
 import redis
 import rq
+from app import db, login
+from app.search import add_to_index, remove_from_index, query_index
 
 
-class PaginatedAPIMixin(object):
-    @staticmethod
-    def to_collection_dict(query, page, per_page, endpoint, **kwargs):
-        resources = db.paginate(query, page=page, per_page=per_page, error_out=False)
-        data = {
-            "items": [item.to_dict() for item in resources.items],
-            "_meta": {
-                "page": page,
-                "per_page": per_page,
-                "total_pages": resources.pages,
-                "total_items": resources.total,
-            },
-            "_links": {
-                "self": url_for(endpoint, page=page, per_page=per_page, **kwargs),
-                "next": (
-                    url_for(endpoint, page=page + 1, per_page=per_page, **kwargs)
-                    if resources.has_next
-                    else None
-                ),
-                "prev": (
-                    url_for(endpoint, page=page - 1, per_page=per_page, **kwargs)
-                    if resources.has_prev
-                    else None
-                ),
-            },
-        }
-        return data
-
-
-class SearchableMixin(object):
+class SearchableMixin:
     @classmethod
     def search(cls, expression, page, per_page):
         ids, total = query_index(cls.__tablename__, expression, page, per_page)
@@ -90,6 +61,35 @@ db.event.listen(db.session, "before_commit", SearchableMixin.before_commit)
 db.event.listen(db.session, "after_commit", SearchableMixin.after_commit)
 
 
+class PaginatedAPIMixin(object):
+    @staticmethod
+    def to_collection_dict(query, page, per_page, endpoint, **kwargs):
+        resources = db.paginate(query, page=page, per_page=per_page, error_out=False)
+        data = {
+            "items": [item.to_dict() for item in resources.items],
+            "_meta": {
+                "page": page,
+                "per_page": per_page,
+                "total_pages": resources.pages,
+                "total_items": resources.total,
+            },
+            "_links": {
+                "self": url_for(endpoint, page=page, per_page=per_page, **kwargs),
+                "next": (
+                    url_for(endpoint, page=page + 1, per_page=per_page, **kwargs)
+                    if resources.has_next
+                    else None
+                ),
+                "prev": (
+                    url_for(endpoint, page=page - 1, per_page=per_page, **kwargs)
+                    if resources.has_prev
+                    else None
+                ),
+            },
+        }
+        return data
+
+
 followers = sa.Table(
     "followers",
     db.metadata,
@@ -112,17 +112,7 @@ class User(PaginatedAPIMixin, UserMixin, db.Model):
         sa.String(32), index=True, unique=True
     )
     token_expiration: so.Mapped[Optional[datetime]]
-    tasks: so.WriteOnlyMapped["Task"] = so.relationship(back_populates="user")
 
-    notifications: so.WriteOnlyMapped["Notification"] = so.relationship(
-        back_populates="user"
-    )
-    messages_sent: so.WriteOnlyMapped["Message"] = so.relationship(
-        foreign_keys="Message.sender_id", back_populates="author"
-    )
-    messages_received: so.WriteOnlyMapped["Message"] = so.relationship(
-        foreign_keys="Message.recipient_id", back_populates="recipient"
-    )
     posts: so.WriteOnlyMapped["Post"] = so.relationship(back_populates="author")
     following: so.WriteOnlyMapped["User"] = so.relationship(
         secondary=followers,
@@ -136,6 +126,16 @@ class User(PaginatedAPIMixin, UserMixin, db.Model):
         secondaryjoin=(followers.c.follower_id == id),
         back_populates="following",
     )
+    messages_sent: so.WriteOnlyMapped["Message"] = so.relationship(
+        foreign_keys="Message.sender_id", back_populates="author"
+    )
+    messages_received: so.WriteOnlyMapped["Message"] = so.relationship(
+        foreign_keys="Message.recipient_id", back_populates="recipient"
+    )
+    notifications: so.WriteOnlyMapped["Notification"] = so.relationship(
+        back_populates="user"
+    )
+    tasks: so.WriteOnlyMapped["Task"] = so.relationship(back_populates="user")
 
     def __repr__(self):
         return "<User {}>".format(self.username)
@@ -332,7 +332,7 @@ class Message(db.Model):
     )
 
     def __repr__(self):
-        return "<Message {}".format(self.body)
+        return "<Message {}>".format(self.body)
 
 
 class Notification(db.Model):
