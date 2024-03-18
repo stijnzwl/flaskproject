@@ -62,10 +62,6 @@ def create_app(config_class=Config):
 
     app.register_blueprint(cli_bp)
 
-    from app.casino import bp as casino_bp
-
-    app.register_blueprint(casino_bp)
-
     if not app.debug and not app.testing:
         if app.config["MAIL_SERVER"]:
             auth = None
@@ -77,7 +73,7 @@ def create_app(config_class=Config):
             mail_handler = SMTPHandler(
                 mailhost=(app.config["MAIL_SERVER"], app.config["MAIL_PORT"]),
                 fromaddr=app.config["MAIL_USERNAME"],
-                #fromaddr="no-reply@" + app.config["MAIL_SERVER"],
+                # fromaddr="no-reply@" + app.config["MAIL_SERVER"],
                 toaddrs=app.config["ADMINS"],
                 subject="Flaskproject Failure",
                 credentials=auth,

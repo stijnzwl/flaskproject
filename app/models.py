@@ -10,7 +10,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 from app import db, login
 from app.search import add_to_index, remove_from_index, query_index
-from decimal import Decimal
 import json
 import redis
 import rq
@@ -80,9 +79,7 @@ class User(UserMixin, db.Model):
     )
     last_message_read_time: so.Mapped[Optional[datetime]]
     tasks: so.WriteOnlyMapped["Task"] = so.relationship(back_populates="user")
-    balance: so.Mapped[Decimal] = so.mapped_column(
-        sa.Numeric(10, 2), default=Decimal("0.0"), nullable=False
-    )
+
     notifications: so.WriteOnlyMapped["Notification"] = so.relationship(
         back_populates="user"
     )
@@ -228,31 +225,6 @@ class Post(SearchableMixin, db.Model):
 
     def __repr__(self):
         return "<Post {}>".format(self.body)
-
-
-class Game(db.Model):
-    id: so.Mapped[int] = so.mapped_column(primary_key=True)
-    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), index=True)
-    game_type: so.Mapped[str] = so.mapped_column(sa.String(50))
-    timestamp: so.Mapped[datetime] = so.mapped_column(
-        index=True, default=lambda: datetime.now(timezone.utc)
-    )
-    winner: so.Mapped[str] = so.mapped_column(sa.String(25))
-    bet: so.Mapped[Decimal] = so.mapped_column(
-        sa.Numeric(10, 2), default=Decimal("0.0"), nullable=False
-    )
-
-
-class GameStatus(db.Model):
-    id: so.Mapped[int] = so.mapped_column(primary_key=True)
-    game_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Game.id), index=True)
-    player_hand: so.Mapped[str] = so.mapped_column(sa.String(250))
-    dealer_hand: so.Mapped[str] = so.mapped_column(sa.String(250))
-    game_status: so.Mapped[str] = so.mapped_column(sa.String(250))
-    dealer_score: so.Mapped[int] = so.mapped_column(sa.Integer)
-    player_score: so.Mapped[int] = so.mapped_column(sa.Integer)
-    deck: so.Mapped[str] = so.mapped_column(sa.Text)
-    player_decision: so.Mapped[str] = so.mapped_column(sa.String(10), nullable=True)
 
 
 class Message(db.Model):
