@@ -22,11 +22,11 @@ def upgrade():
         batch_op.drop_index('ix_game_timestamp')
         batch_op.drop_index('ix_game_user_id')
 
-    op.drop_table('game')
+    op.drop_table('game', cascade='cascade')
     with op.batch_alter_table('game_status', schema=None) as batch_op:
         batch_op.drop_index('ix_game_status_game_id')
 
-    op.drop_table('game_status')
+    op.drop_table('game_status', cascade='cascade')
     with op.batch_alter_table('user', schema=None) as batch_op:
         batch_op.drop_column('balance')
 
