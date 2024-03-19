@@ -31,8 +31,8 @@ msgid "Error: the translation service failed."
 msgstr "Error el servicio de traducciones ha fallado."
 
 #: app/auth/email.py:8
-msgid "[Flaskproject] Reset Your Password"
-msgstr "[Flaskproject] Nueva Contraseña"
+msgid "[Microblog] Reset Your Password"
+msgstr "[Microblog] Nueva Contraseña"
 
 #: app/auth/forms.py:10 app/auth/forms.py:17 app/main/forms.py:10
 msgid "Username"
@@ -171,8 +171,8 @@ msgid "Translate"
 msgstr "Traducir"
 
 #: app/templates/base.html:4
-msgid "Welcome to Flaskproject"
-msgstr "Bienvenido a Flaskproject"
+msgid "Welcome to Microblog"
+msgstr "Bienvenido a Microblog"
 
 #: app/templates/base.html:21
 msgid "Home"

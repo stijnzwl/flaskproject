@@ -5,33 +5,10 @@ from flask_babel import _, get_locale
 import sqlalchemy as sa
 from langdetect import detect, LangDetectException
 from app import db
-from app.main.forms import (
-    EditProfileForm,
-    EmptyForm,
-    PostForm,
-    AddMoneyForm,
-    SearchForm,
-    MessageForm,
-)
+from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, MessageForm
 from app.models import User, Post, Message, Notification
 from app.translate import translate
 from app.main import bp
-from decimal import Decimal
-
-
-def update_balance(amount_to_add):
-    if current_user.is_authenticated:
-        if not isinstance(amount_to_add, Decimal):
-            amount_to_add = Decimal(str(amount_to_add))
-
-        if current_user.balance is None:
-            current_user.balance = amount_to_add
-        else:
-            current_user.balance += amount_to_add
-
-        db.session.commit()
-    else:
-        raise Exception("No authenticated user found.")
 
 
 @bp.before_app_request
@@ -126,6 +103,14 @@ def user(username):
     )
 
 
+@bp.route("/user/<username>/popup")
+@login_required
+def user_popup(username):
+    user = db.first_or_404(sa.select(User).where(User.username == username))
+    form = EmptyForm()
+    return render_template("user_popup.html", user=user, form=form)
+
+
 @bp.route("/edit_profile", methods=["GET", "POST"])
 @login_required
 def edit_profile():
@@ -191,32 +176,6 @@ def translate_text():
     }
 
 
-@bp.route("/manage_money", methods=["GET", "POST"])
-@login_required
-def manage_money():
-    form = AddMoneyForm()
-    user = current_user
-    if form.validate_on_submit():
-        amount = Decimal(form.amount.data)
-
-        if form.add.data:
-            current_user.balance += amount
-            flash(f"Successfully added ${amount} to your balance.", "success")
-
-        elif form.withdraw.data:
-            if amount <= current_user.balance:
-                current_user.balance -= amount
-                flash(f"Successfully withdrew ${amount} from your balance.", "success")
-            else:
-                flash("Withdrawal amount exceeds the current balance.", "error")
-                return render_template("manage_money.html", form=form)
-
-        db.session.commit()
-        return redirect(url_for("main.manage_money"))
-
-    return render_template("manage_money.html", form=form, user=user)
-
-
 @bp.route("/search")
 @login_required
 def search():
@@ -243,14 +202,6 @@ def search():
         next_url=next_url,
         prev_url=prev_url,
     )
-
-
-@bp.route("/user/<username>/popup")
-@login_required
-def user_popup(username):
-    user = db.first_or_404(sa.select(User).where(User.username == username))
-    form = EmptyForm()
-    return render_template("user_popup.html", user=user, form=form)
 
 
 @bp.route("/send_message/<recipient>", methods=["GET", "POST"])
@@ -292,6 +243,17 @@ def messages():
     )
 
 
+@bp.route("/export_posts")
+@login_required
+def export_posts():
+    if current_user.get_task_in_progress("export_posts"):
+        flash(_("An export task is currently in progress"))
+    else:
+        current_user.launch_task("export_posts", _("Exporting posts..."))
+        db.session.commit()
+    return redirect(url_for("main.user", username=current_user.username))
+
+
 @bp.route("/notifications")
 @login_required
 def notifications():
@@ -306,14 +268,3 @@ def notifications():
         {"name": n.name, "data": n.get_data(), "timestamp": n.timestamp}
         for n in notifications
     ]
-
-
-@bp.route("/export_posts")
-@login_required
-def export_posts():
-    if current_user.get_task_in_progress("export_posts"):
-        flash(_("An export task is currently in progress"))
-    else:
-        current_user.launch_task("export_posts", _("Exporting posts..."))
-        db.session.commit()
-    return redirect(url_for("main.user", username=current_user.username))

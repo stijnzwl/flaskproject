@@ -1,10 +1,10 @@
-from app.api import bp
-from app.models import User
-from app import db
-from flask import request, url_for, abort
 import sqlalchemy as sa
-from app.api.errors import bad_request
+from flask import request, url_for, abort
+from app import db
+from app.models import User
+from app.api import bp
 from app.api.auth import token_auth
+from app.api.errors import bad_request
 
 
 @bp.route("/users/<int:id>", methods=["GET"])
@@ -16,7 +16,7 @@ def get_user(id):
 @bp.route("/users", methods=["GET"])
 @token_auth.login_required
 def get_users():
-    page = request.args.get("page", type=int)
+    page = request.args.get("page", 1, type=int)
     per_page = min(request.args.get("per_page", 10, type=int), 100)
     return User.to_collection_dict(sa.select(User), page, per_page, "api.get_users")
 
@@ -59,21 +59,25 @@ def create_user():
     return user.to_dict(), 201, {"Location": url_for("api.get_user", id=user.id)}
 
 
-@bp.route('/users/<int:id>', methods=['PUT'])
+@bp.route("/users/<int:id>", methods=["PUT"])
 @token_auth.login_required
 def update_user(id):
     if token_auth.current_user().id != id:
         abort(403)
     user = db.get_or_404(User, id)
     data = request.get_json()
-    if 'username' in data and data['username'] != user.username and \
-        db.session.scalar(sa.select(User).where(
-            User.username == data['username'])):
-        return bad_request('please use a different username')
-    if 'email' in data and data['email'] != user.email and \
-        db.session.scalar(sa.select(User).where(
-            User.email == data['email'])):
-        return bad_request('please use a different email address')
+    if (
+        "username" in data
+        and data["username"] != user.username
+        and db.session.scalar(sa.select(User).where(User.username == data["username"]))
+    ):
+        return bad_request("please use a different username")
+    if (
+        "email" in data
+        and data["email"] != user.email
+        and db.session.scalar(sa.select(User).where(User.email == data["email"]))
+    ):
+        return bad_request("please use a different email address")
     user.from_dict(data, new_user=False)
     db.session.commit()
     return user.to_dict()

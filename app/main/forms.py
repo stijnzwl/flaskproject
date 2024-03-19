@@ -1,22 +1,11 @@
+from flask import request
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, TextAreaField
-from wtforms.validators import ValidationError, DataRequired, Length, Regexp
+from wtforms.validators import ValidationError, DataRequired, Length
 import sqlalchemy as sa
 from flask_babel import _, lazy_gettext as _l
 from app import db
 from app.models import User
-from flask import request
-
-
-class SearchForm(FlaskForm):
-    q = StringField(_l("Search"), validators=[DataRequired()])
-
-    def __init__(self, *args, **kwargs):
-        if "formdata" not in kwargs:
-            kwargs["formdata"] = request.args
-        if "meta" not in kwargs:
-            kwargs["meta"] = {"csrf": False}
-        super(SearchForm, self).__init__(*args, **kwargs)
 
 
 class EditProfileForm(FlaskForm):
@@ -38,7 +27,7 @@ class EditProfileForm(FlaskForm):
 
 
 class EmptyForm(FlaskForm):
-    submit = SubmitField(_("Submit"))
+    submit = SubmitField("Submit")
 
 
 class PostForm(FlaskForm):
@@ -48,20 +37,19 @@ class PostForm(FlaskForm):
     submit = SubmitField(_l("Submit"))
 
 
-class AddMoneyForm(FlaskForm):
-    amount = StringField(
-        "Add",
-        validators=[
-            DataRequired(),
-            Regexp(r"^\d+(\.\d{1,2})?$", message=_("Enter a valid amount.")),
-        ],
-    )
-    add = SubmitField(_("Add Money"))
-    withdraw = SubmitField(_("Withdraw Money"))
+class SearchForm(FlaskForm):
+    q = StringField(_l("Search"), validators=[DataRequired()])
+
+    def __init__(self, *args, **kwargs):
+        if "formdata" not in kwargs:
+            kwargs["formdata"] = request.args
+        if "meta" not in kwargs:
+            kwargs["meta"] = {"csrf": False}
+        super(SearchForm, self).__init__(*args, **kwargs)
 
 
 class MessageForm(FlaskForm):
     message = TextAreaField(
-        _l("Message"), validators=[DataRequired(), Length(min=0, max=140)]
+        _l("Message"), validators=[DataRequired(), Length(min=1, max=140)]
     )
     submit = SubmitField(_l("Submit"))

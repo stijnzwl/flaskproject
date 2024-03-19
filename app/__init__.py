@@ -8,10 +8,10 @@ from flask_login import LoginManager
 from flask_mail import Mail
 from flask_moment import Moment
 from flask_babel import Babel, lazy_gettext as _l
-from config import Config
 from elasticsearch import Elasticsearch
 from redis import Redis
 import rq
+from config import Config
 
 
 def get_locale():
@@ -31,8 +31,6 @@ babel = Babel()
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
-    app.redis = Redis.from_url(app.config["REDIS_URL"])
-    app.task_queue = rq.Queue("flaskproject-tasks", connection=app.redis)
 
     db.init_app(app)
     migrate.init_app(app, db)
@@ -45,6 +43,8 @@ def create_app(config_class=Config):
         if app.config["ELASTICSEARCH_URL"]
         else None
     )
+    app.redis = Redis.from_url(app.config["REDIS_URL"])
+    app.task_queue = rq.Queue("flaskproject-tasks", connection=app.redis)
 
     from app.errors import bp as errors_bp
 
@@ -62,9 +62,9 @@ def create_app(config_class=Config):
 
     app.register_blueprint(cli_bp)
 
-    from app.api import bp as abi_bp
+    from app.api import bp as api_bp
 
-    app.register_blueprint(abi_bp, url_prefix="/api")
+    app.register_blueprint(api_bp, url_prefix="/api")
 
     if not app.debug and not app.testing:
         if app.config["MAIL_SERVER"]:
@@ -77,7 +77,6 @@ def create_app(config_class=Config):
             mail_handler = SMTPHandler(
                 mailhost=(app.config["MAIL_SERVER"], app.config["MAIL_PORT"]),
                 fromaddr=app.config["MAIL_USERNAME"],
-                # fromaddr="no-reply@" + app.config["MAIL_SERVER"],
                 toaddrs=app.config["ADMINS"],
                 subject="Flaskproject Failure",
                 credentials=auth,
