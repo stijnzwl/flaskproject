@@ -329,10 +329,65 @@ def private_messages():
     )
 
     next_url = (
-        url_for("main.private_messages", page=messages.next_num) if messages.has_next else None
+        url_for("main.private_messages", page=messages.next_num)
+        if messages.has_next
+        else None
     )
     prev_url = (
-        url_for("main.private_messages", page=messages.prev_num) if messages.has_prev else None
+        url_for("main.private_messages", page=messages.prev_num)
+        if messages.has_prev
+        else None
     )
 
-    return render_template("private_messages.html", messages=messages, next_url=next_url, prev_url=prev_url)
+    return render_template(
+        "private_messages.html", messages=messages, next_url=next_url, prev_url=prev_url
+    )
+
+
+@bp.route("/private_messages/<recipient>")
+@login_required
+def private_chat(recipient):
+    current_user.last_message_read_time = datetime.now(timezone.utc)
+    current_user.add_notification("unread_message_count", 0)
+    db.session.commit()
+
+    page = request.args.get("page", 1, type=int)
+    other_user = User.query.filter(User.username == recipient).first_or_404()
+
+    query = (
+        db.session.query(Message)
+        .filter(
+            sa.or_(
+                sa.and_(
+                    Message.recipient_id == current_user.id,
+                    Message.sender_id == other_user.id,
+                ),
+                sa.and_(
+                    Message.sender_id == current_user.id,
+                    Message.recipient_id == other_user.id,
+                ),
+            )
+        )
+        .order_by(Message.timestamp.desc())
+    )
+    messages = db.paginate(
+        query, page=page, per_page=current_app.config["POSTS_PER_PAGE"], error_out=False
+    )
+    
+    next_url = (
+        url_for("main.private_chat", page=messages.next_num)
+        if messages.has_next
+        else None
+    )
+    prev_url = (
+        url_for("main.private_chat", page=messages.prev_num)
+        if messages.has_prev
+        else None
+    )
+    return render_template(
+        "private_chat.html",
+        messages=messages,
+        other_user=other_user,
+        next_url=next_url,
+        prev_url=prev_url,
+    )
