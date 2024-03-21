@@ -268,3 +268,71 @@ def notifications():
         {"name": n.name, "data": n.get_data(), "timestamp": n.timestamp}
         for n in notifications
     ]
+
+
+@bp.route("/private_messages")
+@login_required
+def private_messages():
+    page = request.args.get("page", 1, type=int)
+    received_subquery = (
+        sa.select(
+            Message.sender_id.label("other_user_id"),
+            Message.recipient_id,
+            Message.timestamp.label("latest_timestamp"),
+            Message.id.label("message_id"),
+        )
+        .where(Message.recipient_id == current_user.id)
+        .subquery()
+    )
+
+    sent_subquery = (
+        sa.select(
+            Message.recipient_id.label("other_user_id"),
+            Message.sender_id,
+            Message.timestamp.label("latest_timestamp"),
+            Message.id.label("message_id"),
+        )
+        .where(Message.sender_id == current_user.id)
+        .subquery()
+    )
+
+    union_subquery = sa.union_all(
+        sa.select(
+            received_subquery.c.other_user_id,
+            received_subquery.c.latest_timestamp,
+            received_subquery.c.message_id,
+        ),
+        sa.select(
+            sent_subquery.c.other_user_id,
+            sent_subquery.c.latest_timestamp,
+            sent_subquery.c.message_id,
+        ),
+    ).alias("union_subquery")
+
+    latest_messages_subquery = (
+        sa.select(sa.func.max(union_subquery.c.message_id).label("latest_message_id"))
+        .group_by(union_subquery.c.other_user_id)
+        .subquery()
+    )
+
+    query = (
+        db.session.query(Message)
+        .join(
+            latest_messages_subquery,
+            Message.id == latest_messages_subquery.c.latest_message_id,
+        )
+        .order_by(Message.timestamp.desc())
+    )
+
+    messages = db.paginate(
+        query, page=page, per_page=current_app.config["POSTS_PER_PAGE"], error_out=False
+    )
+
+    next_url = (
+        url_for("main.private_messages", page=messages.next_num) if messages.has_next else None
+    )
+    prev_url = (
+        url_for("main.private_messages", page=messages.prev_num) if messages.has_prev else None
+    )
+
+    return render_template("private_messages.html", messages=messages, next_url=next_url, prev_url=prev_url)
