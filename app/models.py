@@ -107,6 +107,7 @@ class User(PaginatedAPIMixin, UserMixin, db.Model):
     last_seen: so.Mapped[Optional[datetime]] = so.mapped_column(
         default=lambda: datetime.now(timezone.utc)
     )
+    confirmed: so.Mapped[bool] = so.mapped_column(sa.Boolean, default=False)
     last_message_read_time: so.Mapped[Optional[datetime]]
     token: so.Mapped[Optional[str]] = so.mapped_column(
         sa.String(32), index=True, unique=True
@@ -292,6 +293,26 @@ class User(PaginatedAPIMixin, UserMixin, db.Model):
         ) < datetime.now(timezone.utc):
             return None
         return user
+
+    def generate_confirmation_token(self, expiration=3600):
+        return jwt.encode(
+            {"confirm": self.id, "exp": time() + expiration},
+            current_app.config["SECRET_KEY"],
+            algorithm="HS256",
+        )
+
+    def confirm(self, token):
+        try:
+            data = jwt.decode(
+                token, current_app.config["SECRET_KEY"], algorithms=["HS256"]
+            )
+        except:
+            return False
+        if data.get("confirm") != self.id:
+            return False
+        self.confirmed = True
+        db.session.add(self)
+        return True
 
 
 @login.user_loader
