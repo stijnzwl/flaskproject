@@ -24,6 +24,8 @@ class RegistrationForm(FlaskForm):
     submit = SubmitField(_l("Register"))
 
     def validate_username(self, username):
+        if username.data.strip() != username.data:
+            raise ValidationError(_("Usernames cannot start or end with spaces."))
         user = db.session.scalar(sa.select(User).where(User.username == username.data))
         if user is not None:
             raise ValidationError(_("Please use a different username."))
