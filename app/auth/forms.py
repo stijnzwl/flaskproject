@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from flask_babel import _, lazy_gettext as _l
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
-from wtforms.validators import ValidationError, DataRequired, Email, EqualTo
+from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Regexp
 import sqlalchemy as sa
 from app import db
 from app.models import User
@@ -15,7 +15,17 @@ class LoginForm(FlaskForm):
 
 
 class RegistrationForm(FlaskForm):
-    username = StringField(_l("Username"), validators=[DataRequired()])
+    username = StringField(
+        _l("Username"),
+        validators=[
+            DataRequired(),
+            Regexp(
+                "^[A-Za-z][A-Za-z0-9_.]*$",
+                0,
+                "Usernames must have only letters, numbers, dots or underscores",
+            ),
+        ],
+    )
     email = StringField(_l("Email"), validators=[DataRequired(), Email()])
     password = PasswordField(_l("Password"), validators=[DataRequired()])
     password2 = PasswordField(
