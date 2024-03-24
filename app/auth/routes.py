@@ -1,6 +1,6 @@
-from flask import render_template, redirect, url_for, flash, request
+from flask import render_template, redirect, url_for, flash, request, current_app
 from urllib.parse import urlsplit
-from flask_login import login_user, logout_user, current_user
+from flask_login import login_user, logout_user, current_user, login_required
 from flask_babel import _
 import sqlalchemy as sa
 from app import db
@@ -13,6 +13,7 @@ from app.auth.forms import (
 )
 from app.models import User
 from app.auth.email import send_password_reset_email
+from app.email import send_email
 
 
 @bp.route("/login", methods=["GET", "POST"])
@@ -51,7 +52,17 @@ def register():
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
-        flash(_("Congratulations, you are now a registered user!"))
+        token = user.generate_confirmation_token()
+        send_email(
+            "[Flaskproject] Confirm Your Account",
+            sender=current_app.config["ADMINS"],
+            recipients=[user.email],
+            text_body=render_template("email/confirm.txt", user=user, token=token),
+            html_body=render_template("email/confirm.html", user=user, token=token),
+            attachments=None,
+            sync=True,
+        )
+        flash(_("A confirmation email has been sent to you by email."))
         return redirect(url_for("auth.login"))
     return render_template("auth/register.html", title=_("Register"), form=form)
 
@@ -86,3 +97,16 @@ def reset_password(token):
         flash(_("Your password has been reset."))
         return redirect(url_for("auth.login"))
     return render_template("auth/reset_password.html", form=form)
+
+
+@bp.route('/confirm/<token>')
+@login_required
+def confirm(token):
+    if current_user.confirmed:
+        return redirect(url_for('main.index'))
+    if current_user.confirm(token):
+        db.session.commit()
+        flash('You have confirmed your account. Thanks!')
+    else:
+        flash('The confirmation link is invalid or has expired.')
+    return redirect(url_for('main.index'))
